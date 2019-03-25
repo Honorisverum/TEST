@@ -1,0 +1,11 @@
+bicycle
+bird_1
+bird_2
+birds2
+car
+car2
+car11
+coke
+david
+drunk
+fish4
