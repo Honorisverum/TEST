@@ -36,7 +36,11 @@ class MakeTransformer(nn.Module):
         )
 
         self.proj = nn.Linear(self.d_model, self.bb_dim)
-        self.gen = torch.randn(self.n_frames, self.bb_dim)
+
+        if torch.cuda.is_available():
+            self.gen = torch.randn(self.n_frames, self.bb_dim).cuda()
+        else:
+            self.gen = torch.randn(self.n_frames, self.bb_dim)
 
     def forward(self, x, y):
         """
