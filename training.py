@@ -27,7 +27,7 @@ def train(training_set_videos, net, optimizer, save_every,
 
     save_path = os.path.join(os.getcwd(), 'weights', 'last.pt')
 
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95)
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.93)
 
     net.train()
 
