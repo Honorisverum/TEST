@@ -88,7 +88,7 @@ def train(training_set_videos, net, optimizer, save_every,
             if not epoch % save_every:
                 torch.save(net, save_path)
 
-        print("Mean epoch diff:", round(ep_rew), 6)
+        print("Mean epoch diff:", round(ep_rew, 6))
 
         # for divide info on ep blocks
         print("===============================================")
