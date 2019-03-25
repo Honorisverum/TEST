@@ -81,14 +81,14 @@ def train(training_set_videos, net, optimizer, save_every,
             # print info for ep for this video
             iteration_info_format = {
                 'video_title': video.title,
-                'mean_coord': round(math.sqrt(rew / video.len / 5), 6)
+                'mean_coord': round(rew, 6)
             }; print(TRAIN_INFO_STRING.format(**iteration_info_format))
 
         if save_every is not None:
             if not epoch % save_every:
                 torch.save(net, save_path)
 
-        print("Mean epoch coordinate diff:", round(math.sqrt(ep_rew / len(training_set_videos) / 5), 6))
+        print("Mean epoch diff:", round(ep_rew), 6)
 
         # for divide info on ep blocks
         print("===============================================")
