@@ -9,8 +9,7 @@ python main.py -T 15 \
                -lr 0.001 \
                -num_workers 0 \
                -save_every 5 \
-               -dir ../ \
-               -transformer usual
+               -dir .
 ```
 
 170/1.3

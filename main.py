@@ -32,7 +32,6 @@ parser.add_argument("-lr", action="store", dest="lr", default=0.0001, type=float
 parser.add_argument("-num_workers", action="store", dest="num_workers", default=0, type=int)
 parser.add_argument("-save_every", action="store", dest="save_every", default=5, type=int)
 parser.add_argument("-dir", action="store", dest="dir", default=".", type=str)
-parser.add_argument("-transformer", action="store", dest="transformer", default="usual", type=str)
 
 
 args = parser.parse_args()
