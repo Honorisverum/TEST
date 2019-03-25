@@ -1,11 +1,5 @@
-bicycle
-bird_1
-bird_2
-birds2
-car
-car2
-car11
-coke
-david
-drunk
-fish4
+Vid_G_rubikscube
+Vid_D_person
+Vid_C_juice
+Vid_B_cup
+Vid_A_ball
