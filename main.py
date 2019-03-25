@@ -29,7 +29,6 @@ parser.add_argument("-epochs", action="store", dest="epochs1", default=10, type=
 parser.add_argument("-seq_len", action="store", dest="seq_len", default=5, type=int)
 parser.add_argument("-d_model", action="store", dest="d_model", default=64, type=int)
 parser.add_argument("-lr", action="store", dest="lr", default=0.0001, type=float)
-parser.add_argument("-num_workers", action="store", dest="num_workers", default=0, type=int)
 parser.add_argument("-save_every", action="store", dest="save_every", default=5, type=int)
 parser.add_argument("-dir", action="store", dest="dir", default=".", type=str)
 
@@ -79,8 +78,8 @@ optimizer = torch.optim.Adam(full_net.parameters(),
 
 print("LOAD DATA VIDEOS...")
 # prepare train, valid and test sets
-training_set_videos = loader.load_videos(training_set_titles, use_gpu, "train set", args.num_workers, args.dir)
-validating_set_videos = loader.load_videos(validating_set_titles, use_gpu, "valid set", args.num_workers, args.dir)
+training_set_videos = loader.load_videos(training_set_titles, use_gpu, "train set", args.dir)
+validating_set_videos = loader.load_videos(validating_set_titles, use_gpu, "valid set", args.dir)
 print("END LOADING!", end="\n"*2)
 
 

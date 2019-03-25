@@ -58,10 +58,9 @@ class MyCustomVideoDataset(Dataset):
 
 class VideoBuffer(object):
     
-    def __init__(self, title, dataset, num_workers):
+    def __init__(self, title, dataset):
         self.title = title
         self.dataset = dataset
-        self.num_workers = num_workers
         self.len = self.dataset.len
         self.predictions = []
         self.n_fails = 0
@@ -69,10 +68,10 @@ class VideoBuffer(object):
     def get_dataloader(self, T):
         return torch.utils.data.DataLoader(dataset=self.dataset,
                                            batch_size=T,
-                                           num_workers=self.num_workers)
+                                           num_workers=0)
 
 
-def load_videos(titles_list, use_gpu, set_type, num_workers, dir):
+def load_videos(titles_list, use_gpu, set_type, dir):
 
     if titles_list:
         print(f"--------------------{set_type}----------------------")
@@ -115,8 +114,7 @@ def load_videos(titles_list, use_gpu, set_type, num_workers, dir):
 
         # create videos buffer wrapper
         vid = VideoBuffer(title=video_title,
-                          dataset=dataset,
-                          num_workers=num_workers)
+                          dataset=dataset)
 
         videos_list.append(vid)
 
@@ -135,7 +133,7 @@ if __name__ == "__main__":
     titles_list = ['Vid_B_cup']
     videos_list = load_videos(titles_list, use_gpu=False,
                               set_type="train",
-                              num_workers=0, dir='.')
+                              dir='.')
     vb = videos_list[0]
 
     for a, b in vb.get_dataloader(50):

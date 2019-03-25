@@ -3,11 +3,10 @@
 ```bash
 python main.py -T 15 \
                -img 100 \
-               -epochs 50 \
+               -epochs 15 \
                -seq_len 5 \
-               -d_model 256 \
+               -d_model 123 \
                -lr 0.001 \
-               -num_workers 0 \
                -save_every 5 \
                -dir .
 ```

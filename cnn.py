@@ -72,7 +72,7 @@ class CustomCNN(nn.Module):
         self.aux_dim //= 2
 
         # fully connected layer
-        self.fc = nn.Linear(64 * self.aux_dim ** 2, self.out_dim)
+        self.fc = nn.Linear(64 * 25 ** 2, self.out_dim)
 
     def forward(self, x):
 

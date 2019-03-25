@@ -68,7 +68,7 @@ class MakeTransformer(nn.Module):
         z = torch.matmul(scores, values)
 
         # torch(n_frames, d_model)
-        z = self.enc1_wo(z.transpose(0, 1).contiguous().view(self.n_frames, -1))
+        z = self.wo(z.transpose(0, 1).contiguous().view(self.n_frames, -1))
         z = self.fc(z)
 
         return (self.gen * self.proj(z)).sum(0)
