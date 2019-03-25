@@ -18,22 +18,9 @@ import valid
 TRAIN_INFO_STRING = "Title {video_title} | " \
                     "Mean Coord diff: {mean_coord} |"
 
-L2_coef = 0.00005
-
-
-def l1reg(net):
-    regularization_loss = torch.zeros(1)
-    for param in net.parameters():
-        regularization_loss += torch.sum(param ** 2)
-    return regularization_loss * L2_coef
-
-
-def mseloss(gt, pred, net):
-    return nn.MSELoss()(gt, pred) + l1reg(net)
-
 
 def train(training_set_videos, net, optimizer, save_every,
-          T, epochs1, epochs2, use_gpu, A, B, I, validating_set_videos):
+          T, epochs, use_gpu, validating_set_videos):
 
     if use_gpu:
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
@@ -44,11 +31,11 @@ def train(training_set_videos, net, optimizer, save_every,
 
     net.train()
 
-    for epoch in range(1, epochs1 + epochs2 + 1):
+    for epoch in range(1, epochs + 1):
 
         print(f"Epoch: {epoch}")
 
-        criter = torch.nn.SmoothL1Loss() if epoch <= epochs1 else lambda outs, gt: utils.custom_loss(outs, gt, A, B, I)
+        criter = torch.nn.SmoothL1Loss()
 
         ep_rew = 0
 

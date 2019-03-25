@@ -10,41 +10,33 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.patches import Circle
-
 
 
 class MakeTransformer(nn.Module):
+
     def __init__(self, d_model, n_frames, n_gts, bb_dim):
         super(MakeTransformer, self).__init__()
 
-        self.d_model = d_model
+        self.d_model = d_model + bb_dim
         self.n_frames = n_frames
         self.n_gts = n_gts
         self.bb_dim = bb_dim
         self.relu = nn.ReLU()
+        self.h = 4
+        assert self.d_model % 4 == 0, "incorrect inner model dim"
 
-        self.enc_wq = nn.Linear(self.d_model, self.d_model)
-        self.enc_wk = nn.Linear(self.d_model, self.d_model)
-        self.enc_wv = nn.Linear(self.d_model, self.d_model)
-        self.enc_wo = nn.Linear(self.d_model, self.d_model)
+        self.wq, self.wk, self.wv, self.wo = [
+            nn.Linear(self.d_model, self.d_model) for _ in range(4)
+        ]
 
-        self.decsat_wq = nn.Linear(self.bb_dim, self.bb_dim)
-        self.decsat_wk = nn.Linear(self.bb_dim, self.bb_dim)
-        self.decsat_wv = nn.Linear(self.bb_dim, self.bb_dim)
-        self.decsat_wo = nn.Linear(self.bb_dim, self.bb_dim)
+        self.fc = nn.Sequential(
+            nn.Linear(self.d_model, 2 * self.d_model),
+            nn.ReLU(),
+            nn.Linear(2 * self.d_model, self.d_model)
+        )
 
-        #self.aux = nn.Linear(self.n_frames, self.n_gts)
-
-        self.auxaux = nn.Linear(self.d_model, self.bb_dim)
-
-        self.dec_wq = nn.Linear(self.bb_dim, self.bb_dim)
-        self.dec_wk = nn.Linear(self.bb_dim, self.bb_dim)
-        self.dec_wv = nn.Linear(self.bb_dim, self.bb_dim)
-
-        self.proj = nn.Linear(self.n_gts, self.n_gts)
+        self.proj = nn.Linear(self.d_model, self.bb_dim)
+        self.gen = torch.randn(self.n_frames, self.bb_dim)
 
     def forward(self, x, y):
         """
@@ -52,77 +44,34 @@ class MakeTransformer(nn.Module):
         y: torch(n_gts, bb_dim)           |     gts
         """
 
-        new_x = torch.zeros(self.n_gts, self.d_model)
-        for i in range(self.n_gts):
-            new_x[i] = x[i+1] - x[i]
-        x = new_x
+        # torch(n_frames, d_model + bb_dim)
+        y = torch.cat([y, torch.zeros(1, 5)], dim=0)
+        x = torch.cat([x, y], dim=1)
+
 
         """
         -----------------------------------------------
-                            ENCODER
+                            MH Attention
         -----------------------------------------------
         """
-        # torch(n_gts, d_model)
-        enc_queries, enc_keys, enc_values = [
-            l(x) for l in (self.enc_wq, self.enc_wk, self.enc_wv)
+
+        # torch(h, n_frames, d_model // h)
+        queries, keys, values = [
+            l(x).t().view(self.h, self.d_model // self.h, self.n_frames).transpose(1, 2)
+            for l in (self.wq, self.wk, self.wv)
         ]
 
-        # torch(n_gts, n_frames)
-        enc_scores = F.softmax(torch.matmul(enc_queries, enc_keys.t()) / math.sqrt(self.d_model), dim=1)
+        # torch(h, n_frames, n_frames)
+        scores = F.softmax(torch.matmul(queries, keys.transpose(1, 2)) / math.sqrt(self.d_model), dim=1)
 
-        # torch(n_gts, d_model)
-        enc_z = torch.matmul(enc_scores, enc_values)
+        # torch(h, n_frames, d_model // h)
+        z = torch.matmul(scores, values)
 
-        # torch(n_gts, d_model)
-        enc_z = self.enc_wo(enc_z)
+        # torch(n_frames, d_model)
+        z = self.enc1_wo(z.transpose(0, 1).contiguous().view(self.n_frames, -1))
+        z = self.fc(z)
 
-
-        """
-        -----------------------------------------------
-                    DECODER SELF-ATTENTION
-        -----------------------------------------------
-        """
-
-        # torch(n_gts, bb_dim)
-        decsat_queries, decsat_keys, decsat_values = [
-            l(y) for l in (self.decsat_wq, self.decsat_wk, self.decsat_wv)
-        ]
-
-        # torch(n_gts, n_gts)
-        decsat_scores = F.softmax(torch.matmul(decsat_queries, decsat_keys.t()) / math.sqrt(self.bb_dim), dim=1)
-
-        # torch(n_gts, bb_dim)
-        decsat_z = torch.matmul(decsat_scores, decsat_values)
-
-        # torch(n_gts, bb_dim)
-        decsat_z = self.decsat_wo(decsat_z)
-
-        """
-        -----------------------------------------------
-                            DECODER
-        -----------------------------------------------
-        """
-
-        # torch(n_gts, d_model)
-        #enc_z = self.aux(enc_z.t()).t()
-
-        # torch(n_gts, bb_dim)
-        queries = self.auxaux(enc_z)
-
-        # torch(n_gts, d_model)
-        # torch(n_gts, d_model)
-        # torch(n_gts, bb_dim)
-        dec_queries = self.dec_wq(queries)
-        dec_keys = self.dec_wk(decsat_z)
-        dec_values = self.dec_wv(decsat_z)
-
-        # torch(n_gts, n_gts)
-        dec_scores = F.softmax(torch.matmul(dec_queries, dec_keys.t()) / math.sqrt(self.bb_dim), dim=1)
-
-        # torch(n_gts, bb_dim)
-        dec_z = torch.matmul(dec_scores, dec_values)
-
-        return self.proj(dec_z.t()).mean(1)
+        return (self.gen * self.proj(z)).sum(0)
 
 
 class MakeLSTM(nn.Module):

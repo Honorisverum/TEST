@@ -16,6 +16,7 @@ def cpuStats(info=None):
     memoryUse = py.memory_info()[0] / 2. ** 30  # memory use in GB...I think
     print('memory GB:', round(memoryUse, 2))
 
+
 def gpuStats():
     """
     bash: sudo pip install gpustat
@@ -144,9 +145,8 @@ def compute_beta_reward(gt, pred):
 
 
 if __name__ == '__main__':
-    """
-    part for testing functions above
-    """
+    " part for testing "
+
     T = 10
     N = 15
     gt = torch.randn(T, 5)
@@ -157,47 +157,7 @@ if __name__ == '__main__':
     print(ans)
     print(ans.size())
 
-    """
-    def compute_reward(pred, gt, A, B, I):
-        #intersect = compute_rewards2(gt, pred)
-        intersect = compute_intersect(gt, pred)
-        angle = compute_angle_reward(gt, pred)
-        beta = compute_beta_reward(gt, pred)
-        print(angle.mean(), beta.mean(), intersect.mean())
-        #return (A * angle + B * beta + I * intersect).mean()
-        return (intersect).mean()
-    """
 
-    """
-    def compute_intersect(gt, pred, eps=1e-6):
-        r = torch.sqrt(torch.sum((gt[:, 0:2] - gt[:, 2:4]) ** 2, dim=1)) / 2
-        R = torch.sqrt(torch.sum((pred[:, 0:2] - pred[:, 2:4]) ** 2, dim=1)) / 2
-        d = torch.sqrt(torch.sum(((gt[:, 0:2] + gt[:, 2:4] - pred[:, 0:2] - pred[:, 2:4]) / 2) ** 2, dim=1))
-        s = d + R + r
-        squares = math.pi * (r ** 2 + R ** 2)
-        #inter = (r ** 2) * torch.acos((d ** 2 + r ** 2 - R ** 2) / (2 * d * r + eps)) + \
-                #(R ** 2) * torch.acos((d ** 2 + R ** 2 - r ** 2) / (2 * d * R + eps)) - \
-                #torch.sqrt(s * (s - 2 * d) * (s - 2 * r) * (s - 2 * R)) / 2
-
-        inter = torch.sqrt(s * (s - 2 * d) * (s - 2 * r) * (s - 2 * R)) / 2
-        #inter[torch.isnan(inter)] = 0
-        return inter
-        #return 1 - torch.div(inter, squares - inter)
-    """
-
-
-    """
-
-    print("\n"*6)
-
-    gt = torch.Tensor([-1, -1, 1, 1, 0.5])
-    pred = torch.Tensor([-1, -1, 1, 1, 0.5])
-    if is_intersect(gt, pred):
-        print("YES")
-    else:
-        print("NO")
-        
-    """
 
 
 

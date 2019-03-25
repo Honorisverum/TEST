@@ -4,8 +4,6 @@ from torch.utils.data.dataset import Dataset
 import numpy as np
 import os
 from PIL import Image
-from PIL import ImageFilter
-from PIL import ImageEnhance
 
 
 """
@@ -17,12 +15,6 @@ from PIL import ImageEnhance
 
 CWD = os.getcwd()
 
-TOTENSOR_CUDA = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        lambda x: x.cuda(),
-        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-        ])
 TOTENSOR = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -36,12 +28,12 @@ def remove_ds_store(lst):
 
 class MyCustomVideoDataset(Dataset):
 
-    def __init__(self, frames_root, gt, l, w, h, use_gpu):
+    def __init__(self, frames_root, gt, l, w, h):
         self.lst = [os.path.join(frames_root, x) for x in remove_ds_store(os.listdir(frames_root))]
         self.len = l
         self.width, self.height = w, h
         self.gt = self.normalize(gt)
-        self.to_tensor = TOTENSOR_CUDA if use_gpu else TOTENSOR
+        self.to_tensor = TOTENSOR
         
     def __getitem__(self, index):
         img = Image.open(self.lst[index])
@@ -113,7 +105,7 @@ def load_videos(titles_list, use_gpu, set_type, num_workers, dir):
         # create dataset
         dataset = MyCustomVideoDataset(frames_root=os.path.join(root, "frames"),
                                        gt=gt_tens, l=n_frames,
-                                       w=x_size, h=y_size, use_gpu=use_gpu)
+                                       w=x_size, h=y_size)
 
         # create videos buffer wrapper
         vid = VideoBuffer(title=video_title,
