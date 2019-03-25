@@ -56,7 +56,7 @@ with open('./sets/valid_set.txt') as f:
 # GPU
 use_gpu = torch.cuda.is_available()
 
-cnn = cnn.PretrainedCNN(img_dim=args.img, out_dim=args.d_model)
+cnn = cnn.CustomCNN(img_dim=args.img, out_dim=args.d_model)
 
 transformer = transform.MakeTransformer(d_model=args.d_model,
                                         n_frames=args.seq_len+1,
