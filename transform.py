@@ -78,13 +78,15 @@ class MakeTransformer(nn.Module):
         # torch(n_gts, d_model_)
         x = torch.cat([x[1:], y], dim=1)
 
-        #self.h = self.h.detach()
+        self.h = self.h.detach()
 
         # torch(d_model_)
         i = self.sigmi(self.wii(now_frame) + self.whi(self.h))
         f = self.sigmf(self.wif(now_frame) + self.whf(self.h))
         g = self.tanhg(self.wig(now_frame) + self.whg(self.h))
         o = self.sigmo(self.wio(now_frame) + self.who(self.h))
+
+        print(i.requires_grad)
 
         """
         -----------------------------------------------
