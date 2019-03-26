@@ -63,7 +63,7 @@ def train(training_set_videos, net, optimizer, save_every,
                 for i, (single_gt, single_frame) in enumerate(zip(gt, images)):
                     net.refresh(single_frame, single_gt)
                     ans = net.forward()
-                    outputs[i] = net.forward()
+                    outputs[i] = ans
                     net.pull_gts(ans.unsqueeze(0))
 
                 # compute loss

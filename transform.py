@@ -86,8 +86,6 @@ class MakeTransformer(nn.Module):
         g = self.tanhg(self.wig(now_frame) + self.whg(self.h))
         o = self.sigmo(self.wio(now_frame) + self.who(self.h))
 
-        print(i.requires_grad)
-
         """
         -----------------------------------------------
                             MH Attention
