@@ -22,7 +22,8 @@ class MakeTransformer(nn.Module):
         self.n_gts = n_gts
         self.bb_dim = bb_dim
         self.relu = nn.ReLU()
-        self.h = 4
+        self.use_gpu = torch.cuda.is_available()
+        self.hh = 4
         assert self.d_model % 4 == 0, "incorrect inner model dim"
 
         self.wq, self.wk, self.wv, self.wo = [
@@ -35,12 +36,13 @@ class MakeTransformer(nn.Module):
             nn.Linear(2 * self.d_model, self.d_model)
         )
 
-        self.proj = nn.Linear(self.d_model, self.bb_dim)
-
-        if torch.cuda.is_available():
-            self.gen = torch.randn(self.n_frames, self.bb_dim).cuda()
+        if self.use_gpu:
+            self.gen = torch.randn(self.n_gts, self.d_model).cuda()
         else:
-            self.gen = torch.randn(self.n_frames, self.bb_dim)
+            self.gen = torch.randn(self.n_gts, self.d_model)
+
+        self.lstm = nn.LSTM(d_model, self.d_model, 1)
+        self.clear_states()
 
     def forward(self, x, y):
         """
@@ -48,10 +50,14 @@ class MakeTransformer(nn.Module):
         y: torch(n_gts, bb_dim)           |     gts
         """
 
-        # torch(n_frames, d_model + bb_dim)
-        y = torch.cat([y, torch.zeros(1, 5)], dim=0)
+        # torch(1, 1, d_model)
+        now_frame = x[0].unsqueeze(0).unsqueeze(0)
+
+        # torch(n_gts, d_model)
+        x = x[1:]
         x = torch.cat([x, y], dim=1)
 
+        self.h.detach_()
 
         """
         -----------------------------------------------
@@ -59,23 +65,34 @@ class MakeTransformer(nn.Module):
         -----------------------------------------------
         """
 
-        # torch(h, n_frames, d_model // h)
+        # torch(hh, n_gts, d_model // h)
         queries, keys, values = [
-            l(x).t().view(self.h, self.d_model // self.h, self.n_frames).transpose(1, 2)
+            l(x).t().view(self.hh, self.d_model // self.hh, self.n_gts).transpose(1, 2)
             for l in (self.wq, self.wk, self.wv)
         ]
 
-        # torch(h, n_frames, n_frames)
+        # torch(hh, n_gts, n_frames)
         scores = F.softmax(torch.matmul(queries, keys.transpose(1, 2)) / math.sqrt(self.d_model), dim=1)
 
-        # torch(h, n_frames, d_model // h)
+        # torch(hh, n_gts, d_model // h)
         z = torch.matmul(scores, values)
 
-        # torch(n_frames, d_model)
-        z = self.wo(z.transpose(0, 1).contiguous().view(self.n_frames, -1))
+        # torch(n_gts, d_model)
+        z = self.wo(z.transpose(0, 1).contiguous().view(self.n_gts, -1))
         z = self.fc(z)
 
-        return (self.gen * self.proj(z)).sum(0)
+        # torch(1, 1, d_model)
+        c = (self.gen * z).sum(0).unsqueeze(0).unsqueeze(0)
+
+        out, (self.h, c) = self.lstm(now_frame, (self.h, c))
+
+        return out.view(-1)[-self.bb_dim:]
+
+    def clear_states(self):
+        if self.use_gpu:
+            self.h = torch.zeros(1, 1, self.d_model, requires_grad=False).cuda()
+        else:
+            self.h = torch.zeros(1, 1, self.d_model, requires_grad=False)
 
 
 class MakeLSTM(nn.Module):
@@ -419,15 +436,15 @@ if __name__ == '__main__':
     """some tests"""
     n_gts = 5
     n_frames = n_gts + 1
-    d_model = 8
+    d_model = 11
     h = 2
     bb_dim = 5
 
     frames = torch.randn(n_frames, d_model)
     gts = torch.randn(n_gts, bb_dim)
 
-    net = MakeLSTM(d_model, n_frames, n_gts, bb_dim)
+    net = MakeTransformer(d_model, n_frames, n_gts, bb_dim)
 
     ans = net(frames, gts)
-    print(ans)
+    print(ans.size())
 
