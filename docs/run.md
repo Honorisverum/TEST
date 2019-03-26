@@ -1,11 +1,11 @@
 # run
 
 ```bash
-python main.py -T 15 \
-               -img 100 \
-               -epochs 15 \
+python main.py -T 25 \
+               -img 50 \
+               -epochs 5 \
                -seq_len 5 \
-               -d_model 123 \
+               -d_model 59 \
                -lr 0.001 \
                -save_every 5 \
                -dir .

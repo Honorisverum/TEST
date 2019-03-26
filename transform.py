@@ -17,14 +17,36 @@ class MakeTransformer(nn.Module):
     def __init__(self, d_model, n_frames, n_gts, bb_dim):
         super(MakeTransformer, self).__init__()
 
-        self.d_model = d_model + bb_dim
+        self.d_model = d_model
+        self.d_model_ = d_model + bb_dim
         self.n_frames = n_frames
         self.n_gts = n_gts
         self.bb_dim = bb_dim
         self.relu = nn.ReLU()
+        self.tanh = nn.Tanh()
         self.use_gpu = torch.cuda.is_available()
         self.hh = 4
-        assert self.d_model % 4 == 0, "incorrect inner model dim"
+        assert self.d_model_ % self.hh == 0, "incorrect inner model dim"
+
+        # i
+        self.wii = nn.Linear(self.d_model, self.d_model_)
+        self.whi = nn.Linear(self.d_model_, self.d_model_)
+        self.sigmi = nn.Sigmoid()
+
+        # f
+        self.wif = nn.Linear(self.d_model, self.d_model_)
+        self.whf = nn.Linear(self.d_model_, self.d_model_)
+        self.sigmf = nn.Sigmoid()
+
+        # g
+        self.wig = nn.Linear(self.d_model, self.d_model_)
+        self.whg = nn.Linear(self.d_model_, self.d_model_)
+        self.tanhg = nn.Tanh()
+
+        # o
+        self.wio = nn.Linear(self.d_model, self.d_model_)
+        self.who = nn.Linear(self.d_model_, self.d_model_)
+        self.sigmo = nn.Sigmoid()
 
         self.wq, self.wk, self.wv, self.wo = [
             nn.Linear(self.d_model, self.d_model) for _ in range(4)
@@ -50,14 +72,19 @@ class MakeTransformer(nn.Module):
         y: torch(n_gts, bb_dim)           |     gts
         """
 
-        # torch(1, 1, d_model)
-        now_frame = x[0].unsqueeze(0).unsqueeze(0)
+        # torch(d_model)
+        now_frame = x[0]
 
-        # torch(n_gts, d_model)
-        x = x[1:]
-        x = torch.cat([x, y], dim=1)
+        # torch(n_gts, d_model_)
+        x = torch.cat([x[1:], y], dim=1)
 
-        self.h.detach_()
+        self.h = self.h.detach()
+
+        # torch(d_model_)
+        i = self.sigmi(self.wii(now_frame) + self.whi(self.h))
+        f = self.sigmf(self.wif(now_frame) + self.whf(self.h))
+        g = self.tanhg(self.wig(now_frame) + self.whg(self.h))
+        o = self.sigmo(self.wio(now_frame) + self.who(self.h))
 
         """
         -----------------------------------------------
@@ -65,28 +92,32 @@ class MakeTransformer(nn.Module):
         -----------------------------------------------
         """
 
-        # torch(hh, n_gts, d_model // h)
+        # torch(hh, n_gts, d_model_ // h)
         queries, keys, values = [
-            l(x).t().view(self.hh, self.d_model // self.hh, self.n_gts).transpose(1, 2)
+            l(x).t().view(self.hh, self.d_model_ // self.hh, self.n_gts).transpose(1, 2)
             for l in (self.wq, self.wk, self.wv)
         ]
 
         # torch(hh, n_gts, n_frames)
-        scores = F.softmax(torch.matmul(queries, keys.transpose(1, 2)) / math.sqrt(self.d_model), dim=1)
+        scores = F.softmax(torch.matmul(queries, keys.transpose(1, 2)) / math.sqrt(self.d_model_), dim=1)
 
-        # torch(hh, n_gts, d_model // h)
+        # torch(hh, n_gts, d_model_ // h)
         z = torch.matmul(scores, values)
 
-        # torch(n_gts, d_model)
+        # torch(n_gts, d_model_)
         z = self.wo(z.transpose(0, 1).contiguous().view(self.n_gts, -1))
         z = self.fc(z)
 
-        # torch(1, 1, d_model)
-        c = (self.gen * z).sum(0).unsqueeze(0).unsqueeze(0)
+        # torch(d_model_)
+        c = (self.gen * z).sum(0)
 
-        out, (self.h, c) = self.lstm(now_frame, (self.h, c))
+        # torch(d_model_)
+        out = self.tanh(f * c + i * g)
 
-        return out.view(-1)[-self.bb_dim:]
+        # torch(d_model_)
+        self.h = o * out
+
+        return self.h[-self.bb_dim:]
 
     def clear_states(self):
         if self.use_gpu:
@@ -407,7 +438,6 @@ class MakeNet(nn.Module):
         self.frames = None
         if callable(self.aux_clear):
             self.aux_clear()
-
 
     def init_seq(self, elem, l):
         """
