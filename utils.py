@@ -80,9 +80,16 @@ def reward2(pred, gt):
 
 
 def compute_rewards2(gt, pred):
-    out_rewards = torch.zeros(gt.size(0))
+    """
+    compute rewards at late training stage
+    :param predictions: torch(T, 5)
+    :param ground_truth: torch(T, N, 5)
+    :return: torch(T, N)
+    """
+    out_rewards = torch.zeros(gt.size(0), pred.size(1))
     for i in range(gt.size(0)):
-        out_rewards[i] = reward2(pred[i], gt[i])
+        for j in range(pred.size(1)):
+            out_rewards[i][j] = reward2(pred[i][j], gt[i])
     return out_rewards
 
 
