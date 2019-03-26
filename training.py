@@ -10,7 +10,6 @@ import utils
 import torch
 import os
 import random
-import torch.nn as nn
 import math
 import valid
 
@@ -35,7 +34,7 @@ def train(training_set_videos, net, optimizer, save_every,
 
         print(f"Epoch: {epoch}")
 
-        criter = torch.nn.SmoothL1Loss()
+        criter = torch.nn.MSELoss()
 
         ep_rew = 0
 
@@ -89,7 +88,7 @@ def train(training_set_videos, net, optimizer, save_every,
             if not epoch % save_every:
                 torch.save(net, save_path)
 
-        print("Mean epoch diff:", round(ep_rew, 6))
+        print("Mean loss:", round(ep_rew, 6))
 
         # for divide info on ep blocks
         print("===============================================")
