@@ -121,9 +121,9 @@ class MakeTransformer(nn.Module):
 
     def clear_states(self):
         if self.use_gpu:
-            self.h = torch.zeros(1, 1, self.d_model, requires_grad=False).cuda()
+            self.h = torch.zeros(self.d_model).cuda()
         else:
-            self.h = torch.zeros(1, 1, self.d_model, requires_grad=False)
+            self.h = torch.zeros(self.d_model)
 
 
 class MakeLSTM(nn.Module):
