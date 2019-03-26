@@ -57,9 +57,9 @@ use_gpu = torch.cuda.is_available()
 
 cnn = cnn.CustomCNN(img_dim=args.img, out_dim=args.d_model)
 
-transformer = transform.MakeTransformer(d_model=args.d_model,
-                                        n_frames=args.seq_len+1,
-                                        n_gts=args.seq_len, bb_dim=5)
+transformer = transform.MakeLSTM(d_model=args.d_model,
+                                 n_frames=args.seq_len+1,
+                                 n_gts=args.seq_len, bb_dim=5)
 
 if use_gpu:
     torch.set_default_tensor_type('torch.cuda.FloatTensor')

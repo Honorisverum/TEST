@@ -138,15 +138,7 @@ class MakeLSTM(nn.Module):
 
         self.clear_states()
 
-        self.lstm1 = nn.LSTM(self.inner_dim, self.inner_dim, 1)
-        self.lstm2 = nn.LSTM(self.inner_dim, self.inner_dim, 1)
-        self.lstm3 = nn.LSTM(self.inner_dim, self.inner_dim, 1)
-        self.lstm4 = nn.LSTM(self.inner_dim, self.inner_dim, 1)
-        self.lstm5 = nn.LSTM(self.inner_dim, self.inner_dim, 1)
-
-        self.final_lstm = nn.LSTM(self.d_model, self.inner_dim, 1)
-
-        #self.proj = nn.Linear(self.inner_dim, self.bb_dim)
+        self.lstm = nn.LSTM(self.d_model, self.inner_dim, 1)
 
     def forward(self, x, y):
         """
@@ -154,8 +146,8 @@ class MakeLSTM(nn.Module):
         y: torch(n_gts, bb_dim)           |     gts
         """
 
-        now_frame = x[-1]
-        inpt = torch.cat([x[:-1], y], dim=1)
+        now_frame = x[0].unsqueeze(0).unsqueeze(0)
+        #inpt = torch.cat([x[:-1], y], dim=1)
 
         """
         =============================
@@ -166,13 +158,7 @@ class MakeLSTM(nn.Module):
         self.h = self.h.detach()
         self.c = self.c.detach()
 
-        _, (self.h, self.c) = self.lstm1(inpt[0].unsqueeze(0).unsqueeze(0), (self.h, self.c))
-        _, (self.h, self.c) = self.lstm2(inpt[1].unsqueeze(0).unsqueeze(0), (self.h, self.c))
-        _, (self.h, self.c) = self.lstm3(inpt[2].unsqueeze(0).unsqueeze(0), (self.h, self.c))
-        _, (self.h, self.c) = self.lstm4(inpt[3].unsqueeze(0).unsqueeze(0), (self.h, self.c))
-        _, (self.h, self.c) = self.lstm5(inpt[4].unsqueeze(0).unsqueeze(0), (self.h, self.c))
-
-        out, (self.h, self.c) = self.final_lstm(now_frame.unsqueeze(0).unsqueeze(0), (self.h, self.c))
+        out, (self.h, self.c) = self.final_lstm(now_frame, (self.h, self.c))
 
         return out.view(-1)[-self.bb_dim:]
 
