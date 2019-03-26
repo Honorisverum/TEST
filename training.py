@@ -34,7 +34,7 @@ def train(training_set_videos, net, optimizer, save_every,
 
         print(f"Epoch: {epoch}")
 
-        criter = torch.nn.MSELoss()
+        criter = lambda out, gt: utils.rl_loss(out, gt)
 
         ep_rew = 0
 

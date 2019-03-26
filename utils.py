@@ -144,6 +144,93 @@ def compute_beta_reward(gt, pred):
     return (gt[:, 4] - pred[:, 4]) ** 2
 
 
+
+"""
+=================================================
+                        RL
+=================================================
+"""
+
+
+def sample_predictions(out, sigma, N):
+    """
+    sample predictions
+    :param out: torch(batch_size, 5)
+    :param sigma: float
+    :param N: int
+    :return: torch(batch_size, N, 5)
+    """
+    ans = sigma * torch.randn(out.size(0), N, 5)
+    return ans + out.unsqueeze(1).expand_as(ans)
+
+
+def compute_rewards1(gt, pred):
+    """
+    compute rewards at early training stage
+    :param gt: torch(batch_size, 5)
+    :param pred: torch(batch_size, N, 5)
+    :return: torch(batch_size, N)
+    """
+    gt = gt.unsqueeze(1).expand_as(pred)
+    ans = torch.abs(pred - gt)
+    return - (ans.mean(dim=2) + ans.max(dim=2)[0]) / 2
+
+
+def compute_baseline(rew):
+    """
+    compute baseline
+    :param rew: torch(batch_size, N)
+    :return: torch(1)
+    """
+    rew = torch.sum(rew, dim=0)
+    return torch.mean(rew, dim=0)
+
+
+def calculate_diff(out, pred, sig):
+    """
+    calculate differences
+    :param out: torch(batch_size, 5)
+    :param pred: torch(batch_size, N, 5)
+    :param sig: float
+    :return: torch(batch_size, N, 5)
+    """
+    out = out.unsqueeze(1).expand_as(pred)
+    df = (out - pred) / sig
+    return df
+
+
+def compute_loss(rew, bs, out, diff):
+    """
+    compute loss
+    :param rew: torch(batch_size, N)
+    :param bs: torch(1)
+    :param out: torch(batch_size, 5)
+    :param diff: torch(batch_size, N, 5)
+    :return:
+    """
+    rew = torch.sum(rew, dim=0) - bs
+    rew = rew.unsqueeze(0).unsqueeze(2)
+    rew = rew.expand_as(diff)
+    out = out.unsqueeze(1).expand_as(diff)
+    return torch.sum(diff * out * rew)
+
+
+def rl_loss(out, gt):
+    """
+    reinforsment learning loss
+    :param out: torch(batch_size, 5)
+    :param gt: torch(batch_size, 5)
+    :return: torch(1)
+    """
+    sigma = 0.01
+    N = 10
+    predictions = sample_predictions(out, sigma, N).detach()
+    rewards = compute_rewards1(gt, predictions) + compute_rewards2(gt, predictions)
+    baseline = compute_baseline(rewards)
+    differences = calculate_diff(out, predictions, sigma).detach()
+    return compute_loss(rewards, baseline, out, differences)
+
+
 if __name__ == '__main__':
     " part for testing "
 
