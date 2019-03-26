@@ -124,7 +124,8 @@ class MakeTransformer(nn.Module):
 
 
 class MakeLSTM(nn.Module):
-    def __init__(self, d_model, n_frames, n_gts, bb_dim, use_gpu):
+
+    def __init__(self, d_model, n_frames, n_gts, bb_dim):
         super(MakeLSTM, self).__init__()
 
         self.d_model = d_model
@@ -132,7 +133,7 @@ class MakeLSTM(nn.Module):
         self.n_gts = n_gts
         self.bb_dim = bb_dim
         self.relu = nn.ReLU()
-        self.use_gpu = use_gpu
+        self.use_gpu = torch.cuda.is_available()
 
         self.inner_dim = self.d_model + self.bb_dim
 
