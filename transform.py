@@ -159,7 +159,7 @@ class MakeLSTM(nn.Module):
         self.h = self.h.detach()
         self.c = self.c.detach()
 
-        out, (self.h, self.c) = self.final_lstm(now_frame, (self.h, self.c))
+        out, (self.h, self.c) = self.lstm(now_frame, (self.h, self.c))
 
         return out.view(-1)[-self.bb_dim:]
 
