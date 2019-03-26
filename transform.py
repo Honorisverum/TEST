@@ -78,7 +78,7 @@ class MakeTransformer(nn.Module):
         # torch(n_gts, d_model_)
         x = torch.cat([x[1:], y], dim=1)
 
-        self.h = self.h.detach()
+        #self.h = self.h.detach()
 
         # torch(d_model_)
         i = self.sigmi(self.wii(now_frame) + self.whi(self.h))
@@ -112,10 +112,7 @@ class MakeTransformer(nn.Module):
         c = (self.gen * z).sum(0)
 
         # torch(d_model_)
-        out = self.tanh(f * c + i * g)
-
-        # torch(d_model_)
-        self.h = o * out
+        self.h = o * self.tanh(f * c + i * g)
 
         return self.h[-self.bb_dim:]
 
@@ -427,7 +424,7 @@ class MakeNet(nn.Module):
         """
         if self.is_init:
             self.frames = self.init_seq(self.cnn(frame.unsqueeze(0)), self.seq_len + 1)
-            self.gts = self.init_seq(gt.unsqueeze(0), self.seq_len)
+            self.gts = self.init_seq(gt.unsqueeze(0), self.seq_len).detach()
             self.is_init = False
         else:
             self.frames = self.pull_frames(self.cnn(frame.unsqueeze(0)))
