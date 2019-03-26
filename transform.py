@@ -49,21 +49,21 @@ class MakeTransformer(nn.Module):
         self.sigmo = nn.Sigmoid()
 
         self.wq, self.wk, self.wv, self.wo = [
-            nn.Linear(self.d_model, self.d_model) for _ in range(4)
+            nn.Linear(self.d_model_, self.d_model_) for _ in range(4)
         ]
 
         self.fc = nn.Sequential(
-            nn.Linear(self.d_model, 2 * self.d_model),
+            nn.Linear(self.d_model_, 2 * self.d_model_),
             nn.ReLU(),
-            nn.Linear(2 * self.d_model, self.d_model)
+            nn.Linear(2 * self.d_model_, self.d_model_)
         )
 
         if self.use_gpu:
-            self.gen = torch.randn(self.n_gts, self.d_model).cuda()
+            self.gen = torch.randn(self.n_gts, self.d_model_).cuda()
         else:
-            self.gen = torch.randn(self.n_gts, self.d_model)
+            self.gen = torch.randn(self.n_gts, self.d_model_)
 
-        self.lstm = nn.LSTM(d_model, self.d_model, 1)
+        #self.lstm = nn.LSTM(self.d_model, self.d_model_, 1)
         self.clear_states()
 
     def forward(self, x, y):
@@ -121,9 +121,9 @@ class MakeTransformer(nn.Module):
 
     def clear_states(self):
         if self.use_gpu:
-            self.h = torch.zeros(self.d_model).cuda()
+            self.h = torch.zeros(self.d_model_).cuda()
         else:
-            self.h = torch.zeros(self.d_model)
+            self.h = torch.zeros(self.d_model_)
 
 
 class MakeLSTM(nn.Module):
