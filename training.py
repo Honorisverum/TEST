@@ -66,18 +66,19 @@ def train(training_set_videos, net, optimizer, save_every,
                     net.pull_gts(ans.unsqueeze(0))
 
                 # compute loss
-                loss = criter(outputs, gt, epoch / epochs)
-                rew = loss.item()
+                loss, rew = criter(outputs, gt, epoch / epochs)
                 
                 loss.backward()
 
                 # Updating parameters
                 optimizer.step()
 
+            rew /= video.len
+
             # clear data before next video
             net.clear()
 
-            ep_rew += rew / video.len
+            ep_rew += rew
             # print info for ep for this video
             iteration_info_format = {
                 'video_title': video.title,
@@ -88,7 +89,7 @@ def train(training_set_videos, net, optimizer, save_every,
             if not epoch % save_every:
                 torch.save(net, save_path)
 
-        print("Mean loss:", round(ep_rew, 6))
+        print("Mean loss:", round(ep_rew / len(training_set_videos), 6))
 
         # for divide info on ep blocks
         print("===============================================")

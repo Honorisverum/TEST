@@ -235,7 +235,7 @@ def rl_loss(out, gt, epoch_ratio):
     rewards = compute_rewards1(gt, predictions) if epoch_ratio <= 0.5 else compute_rewards2(gt, predictions)
     baseline = compute_baseline(rewards)
     differences = calculate_diff(out, predictions, sigma).detach()
-    return compute_loss(rewards, baseline, out, differences)
+    return compute_loss(rewards, baseline, out, differences), baseline.item()
 
 
 if __name__ == '__main__':
