@@ -15,7 +15,7 @@ import valid
 
 
 TRAIN_INFO_STRING = "Title {video_title} | " \
-                    "Mean Coord diff: {mean_coord} |"
+                    "Mean loss: {mean_loss} |"
 
 
 def train(training_set_videos, net, optimizer, save_every,
@@ -34,7 +34,7 @@ def train(training_set_videos, net, optimizer, save_every,
 
         print(f"Epoch: {epoch}")
 
-        criter = lambda out, gt: utils.rl_loss(out, gt)
+        criter = lambda out, gt, er: utils.rl_loss(out, gt, er)
 
         ep_rew = 0
 
@@ -66,8 +66,8 @@ def train(training_set_videos, net, optimizer, save_every,
                     net.pull_gts(ans.unsqueeze(0))
 
                 # compute loss
-                loss = criter(outputs, gt)
-                rew = loss.item() * images.size(0)
+                loss = criter(outputs, gt, epoch / epochs)
+                rew = loss.item()
                 
                 loss.backward()
 
@@ -81,7 +81,7 @@ def train(training_set_videos, net, optimizer, save_every,
             # print info for ep for this video
             iteration_info_format = {
                 'video_title': video.title,
-                'mean_coord': round(rew, 6)
+                'mean_loss': round(rew, 6)
             }; print(TRAIN_INFO_STRING.format(**iteration_info_format))
 
         if save_every is not None:

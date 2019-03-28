@@ -423,7 +423,8 @@ class MakeNet(nn.Module):
         if callable(self.aux_clear):
             self.aux_clear()
 
-    def init_seq(self, elem, l):
+    @staticmethod
+    def init_seq(elem, l):
         """
         create initial seq for transformer
         :param elem: torch(1, some_size)

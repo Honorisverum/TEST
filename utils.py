@@ -222,7 +222,7 @@ def compute_loss(rew, bs, out, diff):
     return torch.sum(diff * out * rew)
 
 
-def rl_loss(out, gt):
+def rl_loss(out, gt, epoch_ratio):
     """
     reinforsment learning loss
     :param out: torch(batch_size, 5)
@@ -232,7 +232,7 @@ def rl_loss(out, gt):
     sigma = 0.01
     N = 10
     predictions = sample_predictions(out, sigma, N).detach()
-    rewards = compute_rewards1(gt, predictions) + compute_rewards2(gt, predictions)
+    rewards = compute_rewards1(gt, predictions) if epoch_ratio <= 0.5 else compute_rewards2(gt, predictions)
     baseline = compute_baseline(rewards)
     differences = calculate_diff(out, predictions, sigma).detach()
     return compute_loss(rewards, baseline, out, differences)
