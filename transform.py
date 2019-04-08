@@ -149,7 +149,7 @@ class MakeLSTM(nn.Module):
 
         now_frame = x[0].unsqueeze(0).unsqueeze(0)
         #inpt = torch.cat([x[:-1], y], dim=1)
-        x[1:].detach_()
+        x[1:] = x[1:].detach()
 
         """
         =============================
