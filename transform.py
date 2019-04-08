@@ -148,14 +148,19 @@ class MakeLSTM(nn.Module):
         """
 
         # torch(1, 1, d_model)
-        now_frame = x[0].unsqueeze(0).unsqueeze(0)
+        #now_frame = x[0].unsqueeze(0).unsqueeze(0)
         # torch(1, 1, bb_dim)
-        now_gt = y[0].unsqueeze(0).unsqueeze(0)
+        #now_gt = y[0].unsqueeze(0).unsqueeze(0)
         # torch(1, 1, inner_dim)
-        now_input = torch.cat([now_frame, now_gt], dim=2)
+        #now_input = torch.cat([now_frame, now_gt], dim=2)
 
-        x[1:] = x[1:].detach()
-        y[1:] = y[1:].detach()
+        #x[1:] = x[1:].detach()
+        #y[1:] = y[1:].detach()
+
+        x = x.unsqueeze(0).unsqueeze(0)
+        y = y.unsqueeze(0).unsqueeze(0)
+
+        now_input = torch.cat([x, y], dim=2)
 
         """
         =============================
@@ -417,12 +422,16 @@ class MakeNet(nn.Module):
         :param gt: torch(5)
         """
         if self.is_init:
-            self.frames = self.init_seq(self.cnn(frame.unsqueeze(0)), self.seq_len + 1)
-            self.gts = self.init_seq(gt.unsqueeze(0), self.seq_len).detach()
+            self.frames = self.cnn(frame.unsqueeze(0))
+            self.gts = gt.unsqueeze(0)
+            #self.frames = self.init_seq(self.cnn(frame.unsqueeze(0)), self.seq_len + 1)
+            #self.gts = self.init_seq(gt.unsqueeze(0), self.seq_len).detach()
             self.is_init = False
         else:
-            self.gts = self.init_seq(torch.zeros(1, 5), self.seq_len).detach()
-            self.frames = self.pull_frames(self.cnn(frame.unsqueeze(0)))
+            self.frames = self.cnn(frame.unsqueeze(0))
+            self.gts = torch.zeros(1, 5)
+            #self.gts = self.init_seq(torch.zeros(1, 5), self.seq_len).detach()
+            #self.frames = self.pull_frames(self.cnn(frame.unsqueeze(0)))
 
     def clear(self):
         self.is_init = True
