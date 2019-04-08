@@ -139,7 +139,7 @@ class MakeLSTM(nn.Module):
 
         self.clear_states()
 
-        self.lstm = nn.LSTM(self.d_model, self.inner_dim, 1)
+        self.lstm = nn.LSTM(self.inner_dim, self.inner_dim, 1)
 
     def forward(self, x, y):
         """
@@ -147,9 +147,15 @@ class MakeLSTM(nn.Module):
         y: torch(n_gts, bb_dim)           |     gts
         """
 
+        # torch(1, 1, d_model)
         now_frame = x[0].unsqueeze(0).unsqueeze(0)
-        #inpt = torch.cat([x[:-1], y], dim=1)
+        # torch(1, 1, bb_dim)
+        now_gt = y[0].unsqueeze(0).unsqueeze(0)
+        # torch(1, 1, inner_dim)
+        now_input = torch.cat([now_frame, now_gt], dim=2)
+
         x[1:] = x[1:].detach()
+        y[1:] = y[1:].detach()
 
         """
         =============================
@@ -415,6 +421,7 @@ class MakeNet(nn.Module):
             self.gts = self.init_seq(gt.unsqueeze(0), self.seq_len).detach()
             self.is_init = False
         else:
+            self.gts = self.init_seq(torch.zeros(1, 5), self.seq_len).detach()
             self.frames = self.pull_frames(self.cnn(frame.unsqueeze(0)))
 
     def clear(self):
