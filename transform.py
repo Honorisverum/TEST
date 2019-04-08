@@ -157,8 +157,8 @@ class MakeLSTM(nn.Module):
         #x[1:] = x[1:].detach()
         #y[1:] = y[1:].detach()
 
-        x = x.unsqueeze(0).unsqueeze(0)
-        y = y.unsqueeze(0).unsqueeze(0)
+        x = x.unsqueeze(0)
+        y = y.unsqueeze(0)
 
         now_input = torch.cat([x, y], dim=2)
 
