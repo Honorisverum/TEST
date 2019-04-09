@@ -15,18 +15,6 @@ from PIL import Image
 
 CWD = os.getcwd()
 
-TOTENSOR_CUDA = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        lambda x: x.cuda(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
-TOTENSOR = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-        ])
-
 
 def remove_ds_store(lst):
     return [x for x in lst if x != '.DS_Store']

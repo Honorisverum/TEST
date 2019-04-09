@@ -72,7 +72,7 @@ class CustomCNN(nn.Module):
         self.aux_dim //= 2
 
         # fully connected layer
-        self.fc = nn.Linear(64 * 25 ** 2, self.out_dim)
+        self.fc = nn.Linear(64 * self.aux_dim ** 2, self.out_dim)
 
     def forward(self, x):
 
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     assert ans.size() == torch.Size([batch_size, out_dim]), f"incorrect out size for PretrainedCNN: {ans.size()}"
     print("PretrainedCNN passed test!")
 
-    img_size = 224
+    img_size = 100
     out_dim = 100
     batch_size = 1
     custom_net = CustomCNN(img_size, out_dim)
