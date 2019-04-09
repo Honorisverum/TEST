@@ -78,8 +78,8 @@ optimizer = torch.optim.Adam(full_net.parameters(),
 
 print("LOAD DATA VIDEOS...")
 # prepare train, valid and test sets
-training_set_videos = loader.load_videos(training_set_titles, use_gpu, "train set", args.dir)
-validating_set_videos = loader.load_videos(validating_set_titles, use_gpu, "valid set", args.dir)
+training_set_videos = loader.load_videos(training_set_titles, use_gpu, "train set", args.dir, args.img)
+validating_set_videos = loader.load_videos(validating_set_titles, use_gpu, "valid set", args.dir, args.img)
 print("END LOADING!", end="\n"*2)
 
 

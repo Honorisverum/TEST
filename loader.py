@@ -19,7 +19,7 @@ TOTENSOR_CUDA = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         lambda x: x.cuda(),
-        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ])
 TOTENSOR = transforms.Compose([
         transforms.Resize((224, 224)),
@@ -34,12 +34,14 @@ def remove_ds_store(lst):
 
 class MyCustomVideoDataset(Dataset):
 
-    def __init__(self, frames_root, gt, l, w, h, use_gpu):
+    def __init__(self, frames_root, gt, l, w, h, use_gpu, img_dim):
         self.lst = [os.path.join(frames_root, x) for x in remove_ds_store(os.listdir(frames_root))]
         self.len = l
         self.width, self.height = w, h
         self.gt = self.normalize(gt)
-        self.to_tensor = TOTENSOR_CUDA if use_gpu else TOTENSOR
+        self.use_gpu = use_gpu
+        self.img_dim = img_dim
+        self.to_tensor = transforms.Compose([self.get_transforms()])
         
     def __getitem__(self, index):
         img = Image.open(self.lst[index])
@@ -54,6 +56,13 @@ class MyCustomVideoDataset(Dataset):
         gt[:, 2] /= self.height
         gt[:, 3] /= self.width
         return gt
+
+    def get_transforms(self):
+        ans = [transforms.Resize((self.img_dim, self.img_dim)), transforms.ToTensor()]
+        if self.use_gpu:
+            ans.append(lambda x: x.cuda())
+        ans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+        return ans
 
 
 class VideoBuffer(object):
@@ -71,7 +80,7 @@ class VideoBuffer(object):
                                            num_workers=0)
 
 
-def load_videos(titles_list, use_gpu, set_type, dir):
+def load_videos(titles_list, use_gpu, set_type, dir, img_dim):
 
     if titles_list:
         print(f"--------------------{set_type}----------------------")
@@ -110,7 +119,8 @@ def load_videos(titles_list, use_gpu, set_type, dir):
         # create dataset
         dataset = MyCustomVideoDataset(frames_root=os.path.join(root, "frames"),
                                        gt=gt_tens, l=n_frames,
-                                       w=x_size, h=y_size, use_gpu=use_gpu)
+                                       w=x_size, h=y_size, use_gpu=use_gpu,
+                                       img_dim=img_dim)
 
         # create videos buffer wrapper
         vid = VideoBuffer(title=video_title,
