@@ -71,6 +71,8 @@ def train(training_set_videos, net, optimizer, save_every,
 
                 w = utils.compute_weights(net)
                 grad_w = utils.compute_weights_grad(net)
+                assert w not in [None, 0], "wrong weights!!!"
+                assert grad_w not in [None, 0], "wrong grad weights!!!"
 
                 # Updating parameters
                 optimizer.step()
