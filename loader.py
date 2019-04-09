@@ -41,7 +41,7 @@ class MyCustomVideoDataset(Dataset):
         self.gt = self.normalize(gt)
         self.use_gpu = use_gpu
         self.img_dim = img_dim
-        self.to_tensor = transforms.Compose([self.get_transforms()])
+        self.to_tensor = transforms.Compose(self.get_transforms())
         
     def __getitem__(self, index):
         img = Image.open(self.lst[index])
