@@ -62,12 +62,15 @@ def train(training_set_videos, net, optimizer, save_every,
                     net.refresh(single_frame, single_gt)
                     ans = net.forward()
                     outputs[i] = ans
-                    net.pull_gts(ans.unsqueeze(0))
+                    #net.pull_gts(ans.unsqueeze(0))
 
                 # compute loss
                 loss, rew = criter(outputs, gt, epoch / epochs)
                 
                 loss.backward()
+
+                w = utils.compute_weights(net)
+                grad_w = utils.compute_weights_grad(net)
 
                 # Updating parameters
                 optimizer.step()
