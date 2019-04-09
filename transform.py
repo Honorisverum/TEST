@@ -141,7 +141,7 @@ class MakeLSTM(nn.Module):
 
         self.lstm = nn.LSTM(self.inner_dim, self.inner_dim, 1)
 
-    def forward(self, x, y):
+    def forward(self, x):
         """
         x: torch(n_frames, d_model)       |     frames
         y: torch(n_gts, bb_dim)           |     gts
@@ -157,10 +157,10 @@ class MakeLSTM(nn.Module):
         #x[1:] = x[1:].detach()
         #y[1:] = y[1:].detach()
 
-        x = x.unsqueeze(0)
-        y = y.unsqueeze(0)
+        #x = x.unsqueeze(0)
+        #y = y.unsqueeze(0)
 
-        now_input = torch.cat([x, y], dim=2)
+        #x = torch.cat([x, y], dim=2)
 
         """
         =============================
@@ -171,9 +171,9 @@ class MakeLSTM(nn.Module):
         self.h = self.h.detach()
         self.c = self.c.detach()
 
-        out, (self.h, self.c) = self.lstm(now_input, (self.h, self.c))
+        x, (self.h, self.c) = self.lstm(x, (self.h, self.c))
 
-        return out.view(-1)[-self.bb_dim:]
+        return x.view(-1)[-self.bb_dim:]
 
     def clear_states(self):
         if self.use_gpu:
@@ -407,13 +407,14 @@ class MakeNet(nn.Module):
         self.is_init = True
         self.frames, self.gts = None, None
         self.aux_clear = getattr(self.transformer, "clear_states", None)
+        self.input = None
 
     def forward(self):
         """
         transformer forward pass
         :return: torch(5)
         """
-        return self.transformer(self.frames, self.gts)
+        return self.transformer(self.input)
 
     def refresh(self, frame, gt):
         """
@@ -424,12 +425,14 @@ class MakeNet(nn.Module):
         if self.is_init:
             self.frames = self.cnn(frame.unsqueeze(0))
             self.gts = gt.unsqueeze(0)
+            self.input = torch.cat([self.frames, self.gts], dim=1).unsqueeze(0)
             #self.frames = self.init_seq(self.cnn(frame.unsqueeze(0)), self.seq_len + 1)
             #self.gts = self.init_seq(gt.unsqueeze(0), self.seq_len).detach()
             self.is_init = False
         else:
             self.frames = self.cnn(frame.unsqueeze(0))
             self.gts = torch.zeros(1, 5)
+            self.input = torch.cat([self.frames, self.gts], dim=1).unsqueeze(0)
             #self.gts = self.init_seq(torch.zeros(1, 5), self.seq_len).detach()
             #self.frames = self.pull_frames(self.cnn(frame.unsqueeze(0)))
 
